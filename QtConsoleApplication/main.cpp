@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
 
-	HANDLE hFile;
+	//HANDLE hFile;
 	//const auto lul = CreateFile();
 
 	return a.exec();
