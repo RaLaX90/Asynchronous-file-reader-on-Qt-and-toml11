@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 	QCoreApplication a(argc, argv);
 
 	HANDLE hFile;
-	const auto lul = CreateFile();
+	//const auto lul = CreateFile();
 
 	return a.exec();
 }
