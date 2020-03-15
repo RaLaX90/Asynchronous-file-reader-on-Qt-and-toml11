@@ -3,7 +3,7 @@
 //#include <QDebug>
 #include "toml11-master/toml.hpp"
 
-#include <windows.h>
+//#include <windows.h>
 //#include <stdio.h>
 //#include <stdlib.h>
 //#include <ctype.h>
@@ -11,28 +11,32 @@
 
 using namespace std;
 
-LPCSTR ReadFromFile() {
-	HANDLE FileHandle;
-	DWORD R;
-	DWORD Size;
-	static char Line[256];
-	FileHandle = CreateFileA("time.txt", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	Size = GetFileSize(FileHandle, &Size);
-	ReadFile(FileHandle, Line, Size, &R, NULL);
-	return Line;
-}
+//LPCSTR ReadFromFile() {
+//	HANDLE FileHandle;
+//	DWORD R;
+//	DWORD Size;
+//	static char Line[256];
+//	FileHandle = CreateFileA("time.txt", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+//	Size = GetFileSize(FileHandle, &Size);
+//	ReadFile(FileHandle, Line, Size, &R, NULL);
+//	return Line;
+//}
 
 int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
 
-	//const auto data = toml::parse("Example.toml");
+	try
+	{
+		const auto data = toml::parse("Example.toml");
+		toml::table path = toml::get<toml::table>(data);
+		cout << "the path is " << path["pathToFile"][0] << endl;
+	}
+	catch (const exception& ex)
+	{
+		cout << ex.what();
+	}
 
-	//toml::table tab = toml::get<toml::table>(data);
-
-	////const auto data2 = toml::parse(tab["pathToFile"][0].as_string());
-
-	//cout << "the title is " << tab["pathToFile"][0].as_string() << endl;
 
 //###########################################################################################################
 
@@ -137,14 +141,35 @@ int main(int argc, char *argv[])
 
 //####################################################################################################################
 
-	/*HANDLE file;
-	TCHAR stdPath[30] = TEXT("F:\КОЛЛЕДЖ\Операционные системы\С++ Визуал Студия 2 семестр\TXT.txt");
-	TCHAR Dannie[12] = TEXT("12345");*/
+//#define UNICODE 
+//#define _UNICODE 
+//#include "stdafx.h" 
+//#include "windows.h" 
+//
+//int _tmain(int argc, _TCHAR* argv[])
+//{
+//	HANDLE file;
+//	TCHAR stdPath[30] = TEXT("F:\КОЛЛЕДЖ\Операционные системы\С++ Визуал Студия 2 семестр\TXT.txt");
+//	file = CreateFile(stdPath, GENERIC_WRITE, 0, NULL,
+//		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+//	TCHAR Dannie[12] = TEXT("12345");
+//	WriteFile(file, Dannie, 20, NULL, NULL);
+//	return 0;
+//	LPDWORD buf;
+//	file = CreateFile(stdPath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+//	CHAR Dannie2[20];
+//	BOOL read;
+//	read = ReadFile(file, Dannie2, 20, buf, NULL);
+//	printf(Dannie2);
+//	CloseHandle(file);
+//	Sleep(5000);
+//
+//}
 
 //####################################################################################################################
 
 
-	cout << ReadFromFile();
+	//cout << ReadFromFile();
 
 
 	return a.exec();
