@@ -1,4 +1,5 @@
-#include <QtCore/QCoreApplication>
+п»ї#include <QtCore/QCoreApplication>
+//#include <QTextCodec>
 #include <iostream>
 //#include <QDebug>
 #include "toml11-master/toml.hpp"
@@ -6,10 +7,10 @@
 //#include <chrono>
 
 #include <windows.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <conio.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <ctype.h>
+//#include <conio.h>
 
 //#include <fstream>
 //#include <string>
@@ -33,59 +34,6 @@ using namespace std;
 //	return Line;
 //}
 
-//1
-HANDLE hEvent;
-DWORD sizeOfBuf = 33554432;
-BYTE *ReadBuffer = new BYTE[sizeOfBuf];
-
-void ReadFromFile(int index) 
-{
-	SYSTEM_INFO SysInfo;  // system information; used to get granularity
-	DWORD dwSysGran;      // system allocation granularity
-	GetSystemInfo(&SysInfo);
-	dwSysGran = SysInfo.dwAllocationGranularity;
-
-	int iEvent = 0;
-
-	DWORD dw = WaitForSingleObject(hEvent, INFINITE);
-
-	HANDLE hFileForRead = CreateFile(L"D:time.txt",		// file to open
-		GENERIC_READ,          // open for reading
-		FILE_SHARE_READ,       // share for reading
-		NULL,                  // default security
-		OPEN_EXISTING,         // existing file only
-		FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED,	// no buffering | asynchronous mode
-		NULL);                 // no attr. template
-
-
-	if (hFileForRead == INVALID_HANDLE_VALUE)
-	{
-		cout << "\nError of opening file!";
-		return;
-	}
-
-	OVERLAPPED lpOverlapped;	// структура для задания режима асинхронного чтения
-	lpOverlapped.hEvent = hEvent;
-	lpOverlapped.Offset = 0;
-	lpOverlapped.OffsetHigh = 0;
-	DWORD  dwBytesRead = 0;
-
-	DWORD  numberOfBytesTrasferred = 0;
-	//DWORD  numberOfBytesToRead = 33554432; // читать блоками, кратными размеру сектора (c флешки) (асинхр.)
-	DWORD  numberOfBytesToRead = 1048576; // c FLOPPY
-
-	bool readFlag = ReadFile(hFileForRead, ReadBuffer, numberOfBytesToRead, &dwBytesRead, &lpOverlapped);
-	bool flag = GetOverlappedResult(hFileForRead, &lpOverlapped, &numberOfBytesTrasferred, FALSE);
-	if (flag) {
-		cout << "\nReadFile(" << index << ") finished" << endl; // ГФО закончилась
-	}
-	else {
-		cout << "\nReadFile(" << index << ") in processing" << endl; // ГФО выполняется
-	}
-
-	//CloseHandle(hFileForRead);
-}
-
 int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
@@ -101,61 +49,200 @@ int main(int argc, char *argv[])
 		cout << ex.what();
 	}*/
 
+	//####################################################################################################################
 
-//###########################################################################################################
 
-	//HANDLE  hFile;     // дескриптор файла
-	//HANDLE  hEndRead;  // дескриптор события
-	//OVERLAPPED  ovl;   // структура управления асинхронным доступом к файлу
+	//####################################################################################################################
 
-	//// создаем события с автоматическим сбросом
-	//hEndRead = CreateEvent(NULL, FALSE, FALSE, NULL);
-	//if (hEndRead == NULL)
-	//	return GetLastError();
+	//#define UNICODE 
+	//#define _UNICODE 
+	////#include "stdafx.h" 
+	//#include "windows.h" 
+	//
+	//	HANDLE file;
+	//	/*file = CreateFile(L"D:time.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	//	TCHAR Dannie[12] = TEXT("12345");
+	//	WriteFile(file, Dannie, 20, NULL, NULL);
+	//	return 0;*/
+	//	LPDWORD buf;
+	//	file = CreateFile(L"D:time.txt", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED, NULL);
+	//	CHAR Dannie2[20];
+	//	BOOL read;
+	//	read = ReadFile(file, Dannie2, 20, buf, NULL);
+	//cout << Dannie2 << endl;
+	//	CloseHandle(file);
+	//	Sleep(5000);
 
-	//// инициализируем структуру OVERLAPPED
-	//ovl.Offset = 0;         // младшая часть смещения равна 0
-	//ovl.OffsetHigh = 0;      // старшая часть смещения равна 0
-	//ovl.hEvent = hEndRead;   // событие для оповещения завершения чтения
 
-	//// открываем файл для чтения
-	//hFile = CreateFile(
-	//	L"time.txt",   // имя файла
-	//	GENERIC_READ,          // чтение из файла
-	//	FILE_SHARE_READ,       // совместный доступ к файлу
-	//	NULL,                  // защиты нет
-	//	OPEN_EXISTING,         // открываем существующий файл
-	//	FILE_FLAG_OVERLAPPED,  // асинхронный ввод
-	//	NULL                   // шаблона нет
-	//);
-	//// проверяем на успешное открытие
-	//if (hFile == INVALID_HANDLE_VALUE)
-	//{
-	//	cerr << "Create file failed." << endl
-	//		<< "The last error code: " << GetLastError() << endl;
+	//####################################################################################################################
 
-	//	CloseHandle(hEndRead);
+		//ifstream infile("D:time.txt", ios::in | ios::binary | ios::ate);
+		//if (infile.is_open()) {
+		//	size_t in_file_size = static_cast<size_t>(infile.tellg());
+		//	cout << "file: " << "D:time.txt" << " - is opened, size = " << in_file_size << " \n";
+		//	vector<char> data_array(in_file_size);
+		//	infile.seekg(0, ios::beg);
+		//	atomic<size_t> read_pos(0);
+		//	size_t const read_by_size = 1024 * 1024;	// 1 MB
+		//	condition_variable cv_read;
+		//	mutex mtx_read;
+		//	thread t_read_file([&]() {
+		//		while (read_pos < in_file_size) {
+		//			size_t current_read_bytes = min(read_by_size, (size_t)in_file_size - read_pos);
+		//			infile.read(data_array.data(), current_read_bytes);
+		//			read_pos += current_read_bytes;
+		//			cv_read.notify_all();
+		//		}
+		//		cout << "thread read ended \n";
+		//	});
+		//	size_t current_pos;
+		//	for (current_pos = 0; current_pos < in_file_size;) {
+		//		size_t tmp_read_pos = read_pos;
+		//		if (tmp_read_pos > current_pos) {
+		//			for (size_t i = current_pos; i < tmp_read_pos; ++i) {
+		//				data_array[i] = data_array[i] * 2;	// process data
+		//			}
+		//		}
+		//		else {
+		//			for (unique_lock<mutex> lock(mtx_read); read_pos <= current_pos; cv_read.wait(lock));
+		//		}
+		//		current_pos = tmp_read_pos;
+		//	}
+		//	t_read_file.join();
+		//	cout << "current_pos = " << current_pos << " \n";
+		//	cout << "read_pos = " << read_pos << " \n";
+		//}
 
-	//	cout << "Press any key to finish.";
-	//	cin.get();
+		//cout << "OK \n";
+		//getchar();
 
-	//	return 0;
-	//}
-	//// читаем данные из файла
-	//for (;;)
-	//{
+//#################################################################################################################### 2
+
+		/*auto start = chrono::steady_clock::now();
+		cout << ReadFromFile();
+		auto end = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
+		cout << "Time is " << end.count() << endl;*/
+
+
+		//####################################################################################################################
+
+	HANDLE port;
+	HANDLE  hEndRead;  // РґРµСЃРєСЂРёРїС‚РѕСЂ СЃРѕР±С‹С‚РёСЏ
+	OVERLAPPED ovr;
+
+	port = CreateFile(L"time.txt", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+	if (port == INVALID_HANDLE_VALUE)
+	{
+		cout << "Create file failed." << endl << "The last error code: " << GetLastError() << endl;
+
+		CloseHandle(port);
+		CloseHandle(hEndRead);
+
+		cout << "Press any key to finish.";
+		cin.get();
+		return 0;
+	}
+
+	memset(&ovr, 0, sizeof(ovr));
+
+	ovr.hEvent = hEndRead;
+
+	hEndRead = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (hEndRead == NULL) {
+		cout << GetLastError();
+	}
+
+	
+
+	while (true) {
+		DWORD R;
+		DWORD  dwError;
+		char Line[256];
+
+		auto bResult = ReadFile(port, Line, sizeof(Line), &R, &ovr);
+
+		cout << "Useful work here" << endl;
+
+		if (!bResult)
+		{
+			switch (dwError = GetLastError())
+			{
+			case ERROR_HANDLE_EOF: {
+				cout << "End of file" << endl;
+				CloseHandle(port);
+				CloseHandle(hEndRead);
+				cout << "Press any key to finish.";
+				cin.get();
+				return 0;
+			}
+			case ERROR_IO_PENDING: {
+				cout << " In process ";
+				break;
+			}
+			default: {
+				cout << "Read file failed." << endl << "The last error code: " << dwError << endl;
+				
+				// Р·Р°РєСЂС‹РІР°РµРј РґРµСЃРєСЂРёРїС‚РѕСЂС‹
+				CloseHandle(port);
+				CloseHandle(hEndRead);
+
+				cin.get();
+				return 0;
+			}
+				
+			}
+		}
+
+		bResult = GetOverlappedResult(port, &ovr, &R, TRUE);
+
+		if (!bResult)
+		{
+			switch (dwError = GetLastError())
+			{
+			case ERROR_HANDLE_EOF:
+				cout << "End of file" << endl;
+				CloseHandle(port);
+				CloseHandle(hEndRead);
+				cout << "Press any key to finish.";
+				cin.get();
+				return 0;
+			}
+		}
+		/*else {
+			cout << "End of file" << endl;
+			CloseHandle(port);
+			CloseHandle(hEndRead);
+			cout << "Press any key to finish.";
+			cin.get();
+			return 0;
+		}*/
+
+		//WaitForSingleObject(hEndRead, INFINITE);
+		// РїРµС‡Р°С‚Р°РµРј С‡РёСЃР»Рѕ
+		cout << Line << " " << endl;
+		// СѓРІРµР»РёС‡РёРІР°РµС‚ СЃРјРµС‰РµРЅРёРµ РІ С„Р°Р№Р»Рµ
+		ovr.Offset += sizeof(Line);
+
+	}
+
+	//char* buf;
+	/*DWORD bc;*/
+	//DWORD  buf_size = 1048576;
+
+	//for (;;){
 	//	DWORD  dwBytesRead;
 	//	DWORD  dwRet;
-	//	int    n;
-
-	//	// читаем одну запись
-	//	if (!ReadFile(
-	//		hFile,           // дескриптор файла
-	//		&n,              // адрес буфера, куда читаем данные
-	//		sizeof(n),       // количество читаемых байтов
-	//		&dwBytesRead,    // количество прочитанных байтов
-	//		&ovl             // чтение асинхронное
-	//	))
+	//	//int    n;
+	//
+	//	/*char* buf;*/
+	//	char Line[256];
+	//
+	//	DWORD R;
+	//	DWORD Size;
+	//	Size = GetFileSize(port, &Size);
+	//
+	//	// С‡РёС‚Р°РµРј РѕРґРЅСѓ Р·Р°РїРёСЃСЊ
+	//	if (!ReadFile(port, Line, buf_size, &dwBytesRead, &ovr))
 	//	{
 	//		switch (dwRet = GetLastError())
 	//		{
@@ -165,111 +252,47 @@ int main(int argc, char *argv[])
 	//		case ERROR_HANDLE_EOF:
 	//			cout << endl << "End of the file." << endl;
 	//			cout << "The file is read." << endl;
-
-	//			// закрываем дескрипторы
-	//			CloseHandle(hFile);
+	//
+	//			// Р·Р°РєСЂС‹РІР°РµРј РґРµСЃРєСЂРёРїС‚РѕСЂС‹
+	//			CloseHandle(port);
 	//			CloseHandle(hEndRead);
-
+	//
 	//			return 1;
 	//		default:
 	//			cout << "Read file failed." << endl
 	//				<< "The last error code: " << dwRet << endl;
-
-	//			// закрываем дескрипторы
-	//			CloseHandle(hFile);
+	//
+	//			// Р·Р°РєСЂС‹РІР°РµРј РґРµСЃРєСЂРёРїС‚РѕСЂС‹
+	//			CloseHandle(port);
 	//			CloseHandle(hEndRead);
-
+	//
 	//			return 0;
 	//		}
 	//	}
-	//	// ждем, пока завершится асинхронная операция чтения
+	//	// Р¶РґРµРј, РїРѕРєР° Р·Р°РІРµСЂС€РёС‚СЃСЏ Р°СЃРёРЅС…СЂРѕРЅРЅР°СЏ РѕРїРµСЂР°С†РёСЏ С‡С‚РµРЅРёСЏ
 	//	WaitForSingleObject(hEndRead, INFINITE);
-	//	// печатаем число
-	//	cout << n << ' ';
-	//	// увеличивает смещение в файле
-	//	ovl.Offset += sizeof(n);
+	//	// РїРµС‡Р°С‚Р°РµРј С‡РёСЃР»Рѕ
+	//	cout << Line << ' ';
+	//	// СѓРІРµР»РёС‡РёРІР°РµС‚ СЃРјРµС‰РµРЅРёРµ РІ С„Р°Р№Р»Рµ
+	//	ovr.Offset += sizeof(Line);
 	//}
 
-//####################################################################################################################
+	/* Р’С‹РїРѕР»РЅСЏРµРј РЅРµРєСѓСЋ РїРѕР»РµР·РЅСѓСЋ СЂР°Р±РѕС‚Сѓ */
+	//auto err = WaitForSingleObject(ovr.hEvent, 3000);
 
-//#define UNICODE 
-//#define _UNICODE 
-//#include "stdafx.h" 
-//#include "windows.h" 
-//
-//	HANDLE file;
-//	file = CreateFile(L"D:time.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-//	TCHAR Dannie[12] = TEXT("12345");
-//	WriteFile(file, Dannie, 20, NULL, NULL);
-//	return 0;
-//	LPDWORD buf;
-//	file = CreateFile(stdPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED, NULL);
-//	CHAR Dannie2[20];
-//	BOOL read;
-//	read = ReadFile(file, Dannie2, 20, buf, NULL);
-//	printf(Dannie2);
-//	CloseHandle(file);
-//	Sleep(5000);
+	//if (err == WAIT_OBJECT_0) {
+	//	GetOverlappedResult(port, &ovr, &bc, FALSE);
+	//	cout << "Count of bites = " << bc << endl;
+	//}
+	//else {
 
+	//	cout << "Error" << endl;
+	//	/* РћР±СЂР°Р±РѕС‚РєР° РѕС€РёР±РєРё */
 
-//####################################################################################################################
-
-	//ifstream infile("D:time.txt", ios::in | ios::binary | ios::ate);
-	//if (infile.is_open()) {
-	//	size_t in_file_size = static_cast<size_t>(infile.tellg());
-	//	cout << "file: " << "D:time.txt" << " - is opened, size = " << in_file_size << " \n";
-	//	vector<char> data_array(in_file_size);
-	//	infile.seekg(0, ios::beg);
-	//	atomic<size_t> read_pos(0);
-	//	size_t const read_by_size = 1024 * 1024;	// 1 MB
-	//	condition_variable cv_read;
-	//	mutex mtx_read;
-	//	thread t_read_file([&]() {
-	//		while (read_pos < in_file_size) {
-	//			size_t current_read_bytes = min(read_by_size, (size_t)in_file_size - read_pos);
-	//			infile.read(data_array.data(), current_read_bytes);
-	//			read_pos += current_read_bytes;
-	//			cv_read.notify_all();
-	//		}
-	//		cout << "thread read ended \n";
-	//	});
-	//	size_t current_pos;
-	//	for (current_pos = 0; current_pos < in_file_size;) {
-	//		size_t tmp_read_pos = read_pos;
-	//		if (tmp_read_pos > current_pos) {
-	//			for (size_t i = current_pos; i < tmp_read_pos; ++i) {
-	//				data_array[i] = data_array[i] * 2;	// process data
-	//			}
-	//		}
-	//		else {
-	//			for (unique_lock<mutex> lock(mtx_read); read_pos <= current_pos; cv_read.wait(lock));
-	//		}
-	//		current_pos = tmp_read_pos;
-	//	}
-	//	t_read_file.join();
-	//	cout << "current_pos = " << current_pos << " \n";
-	//	cout << "read_pos = " << read_pos << " \n";
 	//}
 
-	//cout << "OK \n";
-	//getchar();
-
-//####################################################################################################################  1
-
-hEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
-for (int i = 0; i < 10; ++i)
-{
-	ReadFromFile(i); 
-
-}
-cout << endl << "Press any key to exit...";
-Sleep(2000);
-
-//####################################################################################################################  2
-	/*auto start = chrono::steady_clock::now();
-	cout << ReadFromFile();
-	auto end = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
-	cout << "Time is " << end.count() << endl;*/
+	/*CloseHandle(port);
+	CloseHandle(ovr.hEvent);*/
 
 	return a.exec();
 }
