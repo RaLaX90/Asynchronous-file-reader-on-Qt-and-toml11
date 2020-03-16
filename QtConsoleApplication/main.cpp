@@ -1,6 +1,7 @@
 ﻿#include <QtCore/QCoreApplication>
 //#include <QTextCodec>
 #include <iostream>
+#include <thread> 
 //#include <QDebug>
 #include "toml11-master/toml.hpp"
 
@@ -21,6 +22,7 @@
 //#include <algorithm>
 
 using namespace std;
+using namespace chrono;
 
 //2
 //LPCSTR ReadFromFile() {
@@ -36,7 +38,7 @@ using namespace std;
 
 void readFromFile(wstring str) {
 
-	auto start = chrono::steady_clock::now();
+	auto start = steady_clock::now();
 
 	HANDLE port;
 	HANDLE  hEndRead;  // дескриптор события
@@ -44,33 +46,37 @@ void readFromFile(wstring str) {
 
 	memset(&ovr, 0, sizeof(ovr));
 
+	hEndRead = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (hEndRead == NULL) {
+		cout << GetLastError();
+	}
+
 	ovr.hEvent = hEndRead;
 
 	port = CreateFile(str.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
 	if (port == INVALID_HANDLE_VALUE)
 	{
 		cout << "Create file failed." << endl << "The last error code: " << GetLastError() << endl;
-
 		CloseHandle(port);
 		CloseHandle(hEndRead);
-
-		cout << "Press any key to finish.";
-		cin.get();
-		exit(1);
-		//return 0;
-	}
-
-	hEndRead = CreateEvent(NULL, FALSE, FALSE, NULL);
-	if (hEndRead == NULL) {
-		cout << GetLastError();
+		cout << "Time is " << (duration_cast<seconds>(steady_clock::now() - start)).count() << " seconds" << endl;
+		return;
 	}
 
 	while (true) {
 		DWORD R;
 		DWORD  dwError;
-		static char Line[256];
+		char Line[100];
 
 		auto bResult = ReadFile(port, Line, sizeof(Line), &R, &ovr);
+
+		for (int i = 0; i < 5; i++) {
+			for (int j = 0; j < 10; j++) {
+				Sleep(100);
+				cout << "#";
+			}
+			cout << endl;
+		}
 
 		cout << "Useful work here" << endl;
 
@@ -80,30 +86,22 @@ void readFromFile(wstring str) {
 			{
 			case ERROR_HANDLE_EOF: {
 				cout << "End of file" << endl;
-
 				CloseHandle(port);
 				CloseHandle(hEndRead);
-
-				cout << "Press any key to finish.";
-
-				cin.get();
-				exit(1);
-				//return 0;
+				cout << "Time is " << (duration_cast<seconds>(steady_clock::now() - start)).count() << " seconds" << endl;
+				return;
 			}
 			case ERROR_IO_PENDING: {
-				cout << " In process ";
+				cout << " In process " << endl;
 				break;
 			}
 			default: {
 				cout << "Read file failed." << endl << "The last error code: " << dwError << endl;
-
 				// закрываем дескрипторы
 				CloseHandle(port);
 				CloseHandle(hEndRead);
-
-				cin.get();
-				exit(1);
-				//return 0;
+				cout << "Time is " << (duration_cast<seconds>(steady_clock::now() - start)).count() << " seconds" << endl;
+				return;
 			}
 
 			}
@@ -119,19 +117,16 @@ void readFromFile(wstring str) {
 				cout << "End of file" << endl;
 				CloseHandle(port);
 				CloseHandle(hEndRead);
-				cout << "Press any key to finish.";
-				cin.get();
-				exit(1);
-				//return 0;
+				cout << "Time is " << (duration_cast<seconds>(steady_clock::now() - start)).count() << " seconds" << endl;
+				return;
 			}
 		}
 		/*else {
 			cout << "End of file" << endl;
 			CloseHandle(port);
 			CloseHandle(hEndRead);
-			cout << "Press any key to finish.";
-			cin.get();
-			return 0;
+			cout << "Time is " << (duration_cast<seconds>(steady_clock::now() - start)).count() << "seconds" << endl;
+			return;
 		}*/
 
 		//WaitForSingleObject(hEndRead, INFINITE);
@@ -142,8 +137,20 @@ void readFromFile(wstring str) {
 
 	}
 
-	/*auto end = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
-	return end;*/
+	/* Выполняем некую полезную работу */
+	//auto err = WaitForSingleObject(ovr.hEvent, 3000);
+
+	//if (err == WAIT_OBJECT_0) {
+	//	GetOverlappedResult(port, &ovr, &bc, FALSE);
+	//	cout << "Count of bites = " << bc << endl;
+	//}
+	//else {
+
+	//	cout << "Error" << endl;
+	//	/* Обработка ошибки */
+
+	//}
+
 }
 
 int main(int argc, char *argv[])
@@ -171,140 +178,22 @@ int main(int argc, char *argv[])
 		cout << ex.what();
 	}*/
 
-		
-
-//#################################################################################################################### 2
-
-		/*auto start = chrono::steady_clock::now();
-		cout << ReadFromFile();
-		auto end = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
-		cout << "Time is " << end.count() << endl;*/
 
 
-		//####################################################################################################################
+	//#################################################################################################################### 2
 
-	HANDLE port;
-	HANDLE  hEndRead;  // дескриптор события
-	OVERLAPPED ovr;
+			/*auto start = steady_clock::now();
+			cout << ReadFromFile();
+			auto end = duration_cast<milliseconds>(steady_clock::now() - start);
+			cout << "Time is " << end.count() << endl;*/
 
-	memset(&ovr, 0, sizeof(ovr));
 
-	ovr.hEvent = hEndRead;
+			//####################################################################################################################
 
-	port = CreateFile(L"time.txt", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
-	if (port == INVALID_HANDLE_VALUE)
-	{
-		cout << "Create file failed." << endl << "The last error code: " << GetLastError() << endl;
-
-		CloseHandle(port);
-		CloseHandle(hEndRead);
-
-		cout << "Press any key to finish.";
-		cin.get();
-		exit(1);
-		//return 0;
-	}
-
-	hEndRead = CreateEvent(NULL, FALSE, FALSE, NULL);
-	if (hEndRead == NULL) {
-		cout << GetLastError();
-	}
-
-	while (true) {
-		DWORD R;
-		DWORD  dwError;
-		static char Line[1000000];
-
-		auto bResult = ReadFile(port, Line, sizeof(Line), &R, &ovr);
-
-		cout << "Useful work here" << endl;
-
-		if (!bResult)
-		{
-			switch (dwError = GetLastError())
-			{
-			case ERROR_HANDLE_EOF: {
-				cout << "End of file" << endl;
-
-				CloseHandle(port);
-				CloseHandle(hEndRead);
-
-				cout << "Press any key to finish.";
-
-				cin.get();
-				exit(1);
-				//return 0;
-			}
-			case ERROR_IO_PENDING: {
-				cout << " In process ";
-				break;
-			}
-			default: {
-				cout << "Read file failed." << endl << "The last error code: " << dwError << endl;
-
-				// закрываем дескрипторы
-				CloseHandle(port);
-				CloseHandle(hEndRead);
-
-				cin.get();
-				exit(1);
-				//return 0;
-			}
-
-			}
-		}
-
-		bResult = GetOverlappedResult(port, &ovr, &R, TRUE);
-
-		if (!bResult)
-		{
-			switch (dwError = GetLastError())
-			{
-			case ERROR_HANDLE_EOF:
-				cout << "End of file" << endl;
-				CloseHandle(port);
-				CloseHandle(hEndRead);
-				cout << "Press any key to finish.";
-				cin.get();
-				exit(1);
-				//return 0;
-			}
-		}
-		/*else {
-			cout << "End of file" << endl;
-			CloseHandle(port);
-			CloseHandle(hEndRead);
-			cout << "Press any key to finish.";
-			cin.get();
-			return 0;
-		}*/
-
-		//WaitForSingleObject(hEndRead, INFINITE);
-		// печатаем число
-		cout << Line << " " << endl;
-		// увеличивает смещение в файле
-		ovr.Offset += sizeof(Line);
-
-	}
-
-	/* Выполняем некую полезную работу */
-	//auto err = WaitForSingleObject(ovr.hEvent, 3000);
-
-	//if (err == WAIT_OBJECT_0) {
-	//	GetOverlappedResult(port, &ovr, &bc, FALSE);
-	//	cout << "Count of bites = " << bc << endl;
-	//}
-	//else {
-
-	//	cout << "Error" << endl;
-	//	/* Обработка ошибки */
-
-	//}
-
-	/*CloseHandle(port);
-	CloseHandle(ovr.hEvent);*/
-
-//readFromFile(L"time.txt");
+	thread t(readFromFile, L"Беляев-Наум.-Генри-Форд-royallib.com.txt");
+	readFromFile(L"time.txt");
+	t.join();
+	//readFromFile(L"Беляев-Наум.-Генри-Форд-royallib.com.txt");
 
 
 	return a.exec();
