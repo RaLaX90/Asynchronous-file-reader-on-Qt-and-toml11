@@ -84,6 +84,8 @@
     <ClCompile Include="Method1.cpp" />
     <ClCompile Include="Method2.cpp" />
     <ClCompile Include="Method3.cpp" />
+    <ClCompile Include="Method4.cpp" />
+    <ClCompile Include="Method5.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Example.toml" />
