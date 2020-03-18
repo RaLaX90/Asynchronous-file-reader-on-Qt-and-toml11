@@ -4,8 +4,7 @@
 #include <thread> 
 //#include <QDebug>
 #include "toml11-master/toml.hpp"
-
-//#include <chrono>
+#include <codecvt>
 
 #include <windows.h>
 //#include <stdio.h>
@@ -24,6 +23,7 @@
 using namespace std;
 using namespace chrono;
 
+
 //2
 //LPCSTR ReadFromFile() {
 //	HANDLE FileHandle;
@@ -36,7 +36,17 @@ using namespace chrono;
 //	return Line;
 //}
 
-void readFromFile(wstring str) {
+string to_string(wstring wstr)
+{
+	return wstring_convert<codecvt_utf8<wchar_t>>().to_bytes(wstr);
+}
+
+wstring to_wstring(string str)
+{
+	return wstring_convert<codecvt_utf8<wchar_t>>().from_bytes(str);
+}
+
+void readFromFileUsingWinAPI(wstring str) {
 
 	auto start = steady_clock::now();
 
@@ -56,7 +66,7 @@ void readFromFile(wstring str) {
 	port = CreateFile(str.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
 	if (port == INVALID_HANDLE_VALUE)
 	{
-		cout << "Create file failed." << endl << "The last error code: " << GetLastError() << endl;
+		cout << "Create file " << to_string(str) << " is failed." << endl << "The last error code: " << GetLastError() << endl;
 		CloseHandle(port);
 		CloseHandle(hEndRead);
 		cout << "Time is " << (duration_cast<seconds>(steady_clock::now() - start)).count() << " seconds" << endl;
@@ -66,13 +76,13 @@ void readFromFile(wstring str) {
 	while (true) {
 		DWORD R;
 		DWORD  dwError;
-		char Line[100];
+		char Line[100000];
 
 		auto bResult = ReadFile(port, Line, sizeof(Line), &R, &ovr);
 
 		for (int i = 0; i < 5; i++) {
 			for (int j = 0; j < 10; j++) {
-				Sleep(100);
+				this_thread::sleep_for(milliseconds(100));
 				cout << "#";
 			}
 			cout << endl;
@@ -96,7 +106,7 @@ void readFromFile(wstring str) {
 				break;
 			}
 			default: {
-				cout << "Read file failed." << endl << "The last error code: " << dwError << endl;
+				cout << "Read file " << to_string(str) << " is failed." << endl << "The last error code: " << dwError << endl;
 				// закрываем дескрипторы
 				CloseHandle(port);
 				CloseHandle(hEndRead);
@@ -131,6 +141,7 @@ void readFromFile(wstring str) {
 
 		//WaitForSingleObject(hEndRead, INFINITE);
 		// печатаем число
+		cout << this_thread::get_id() << endl;
 		cout << Line << " " << endl;
 		// увеличивает смещение в файле
 		ovr.Offset += sizeof(Line);
@@ -145,12 +156,52 @@ void readFromFile(wstring str) {
 	//	cout << "Count of bites = " << bc << endl;
 	//}
 	//else {
-
 	//	cout << "Error" << endl;
 	//	/* Обработка ошибки */
 
 	//}
 
+}
+
+void readFromFileUsingSTD(const char str[]) {
+
+	unique_ptr<FILE, int(*)(FILE*)> file(fopen(str, "rt"), fclose);
+
+	if (file.get() == NULL)
+	{
+		fputs("Ошибка файла", stderr);
+		exit(1);
+	}
+
+	// определяем размер файла
+	fseek(file.get(), 0, SEEK_END);
+	long lSize = ftell(file.get());
+	rewind(file.get());
+
+	//unique_ptr<char , void*> buffer((char*)malloc(sizeof(char) * lSize), free);
+	unique_ptr<char> buffer((char*)calloc(sizeof(char), lSize));
+	//char * buffer = (char*)calloc(sizeof(char), lSize); 
+
+	if (buffer.get() == NULL)
+	{
+		fputs("Ошибка памяти", stderr);
+		exit(2);
+	}
+
+	size_t result = fread(buffer.get(), 1, lSize, file.get());
+
+	if (result != lSize)
+	{
+		if (!feof(file.get())) { // !
+			fputs("Ошибка чтения", stderr);
+			exit(3);
+		}
+	}
+
+	cout << buffer.get();
+
+	//fclose(ptrFile);
+	free(buffer.get());
 }
 
 int main(int argc, char *argv[])
@@ -159,6 +210,9 @@ int main(int argc, char *argv[])
 
 	setlocale(LC_ALL, "ru");
 
+
+
+
 	/*auto oldin = GetConsoleCP();
 	auto oldout = GetConsoleOutputCP();
 	SetConsoleCP(1251);
@@ -166,18 +220,21 @@ int main(int argc, char *argv[])
 	//SetConsoleCP(oldin);
 	//SetConsoleOutputCP(oldout);
 
-
-	/*try
+	try
 	{
 		const auto data = toml::parse("Example.toml");
-		toml::table path = toml::get<toml::table>(data);
-		cout << "The path 1 is " << path["pathToFile"][0] << " and the path 2 is " << path["pathToFile"][1] << endl;
+		//toml::table path = toml::get<toml::table>(data);
+		string str1 = toml::find<toml::string>(data, "pathToFile", 0);
+		string str2 = toml::find<toml::string>(data, "pathToFile", 1);
+		//cout << "The path 1 is " << path["pathToFile"][0] << " and the path 2 is " << path["pathToFile"][1] << endl;
+		//thread t(readFromFileUsingSTD, to_wstring(path["pathToFile"][0].as_string()));
+		readFromFileUsingSTD(str2.c_str());
+		//t.join();
 	}
 	catch (const exception& ex)
 	{
 		cout << ex.what();
-	}*/
-
+	}
 
 
 	//#################################################################################################################### 2
@@ -189,11 +246,6 @@ int main(int argc, char *argv[])
 
 
 			//####################################################################################################################
-
-	thread t(readFromFile, L"Беляев-Наум.-Генри-Форд-royallib.com.txt");
-	readFromFile(L"time.txt");
-	t.join();
-	//readFromFile(L"Беляев-Наум.-Генри-Форд-royallib.com.txt");
 
 
 	return a.exec();
