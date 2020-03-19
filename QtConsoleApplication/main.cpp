@@ -23,6 +23,7 @@
 using namespace std;
 using namespace chrono;
 
+#define locale;
 
 //2
 //LPCSTR ReadFromFile() {
@@ -50,25 +51,26 @@ void readFromFileUsingWinAPI(wstring str) {
 
 	auto start = steady_clock::now();
 
-	HANDLE port;
-	HANDLE  hEndRead;  // дескриптор события
+	using UniqueHandle = unique_ptr<remove_pointer<HANDLE>::type, integral_constant<decltype(&CloseHandle), &CloseHandle>>;
+
 	OVERLAPPED ovr;
 
 	memset(&ovr, 0, sizeof(ovr));
 
-	hEndRead = CreateEvent(NULL, FALSE, FALSE, NULL);
-	if (hEndRead == NULL) {
+	UniqueHandle hEndRead(CreateEvent(NULL, FALSE, FALSE, NULL));
+	if (hEndRead.get() == NULL) 
+	{
 		cout << GetLastError();
 	}
 
-	ovr.hEvent = hEndRead;
+	ovr.hEvent = hEndRead.get();
 
-	port = CreateFile(str.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
-	if (port == INVALID_HANDLE_VALUE)
+	UniqueHandle port(CreateFile(str.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL));
+	if (port.get() == INVALID_HANDLE_VALUE)
 	{
 		cout << "Create file " << to_string(str) << " is failed." << endl << "The last error code: " << GetLastError() << endl;
-		CloseHandle(port);
-		CloseHandle(hEndRead);
+		//CloseHandle(port);
+		//CloseHandle(hEndRead);
 		cout << "Time is " << (duration_cast<seconds>(steady_clock::now() - start)).count() << " seconds" << endl;
 		return;
 	}
@@ -78,7 +80,7 @@ void readFromFileUsingWinAPI(wstring str) {
 		DWORD  dwError;
 		char Line[100000];
 
-		auto bResult = ReadFile(port, Line, sizeof(Line), &R, &ovr);
+		auto bResult = ReadFile(port.get(), Line, sizeof(Line), &R, &ovr);
 
 		for (int i = 0; i < 5; i++) {
 			for (int j = 0; j < 10; j++) {
@@ -96,8 +98,8 @@ void readFromFileUsingWinAPI(wstring str) {
 			{
 			case ERROR_HANDLE_EOF: {
 				cout << "End of file" << endl;
-				CloseHandle(port);
-				CloseHandle(hEndRead);
+				//CloseHandle(port);
+				//CloseHandle(hEndRead);
 				cout << "Time is " << (duration_cast<seconds>(steady_clock::now() - start)).count() << " seconds" << endl;
 				return;
 			}
@@ -107,9 +109,8 @@ void readFromFileUsingWinAPI(wstring str) {
 			}
 			default: {
 				cout << "Read file " << to_string(str) << " is failed." << endl << "The last error code: " << dwError << endl;
-				// закрываем дескрипторы
-				CloseHandle(port);
-				CloseHandle(hEndRead);
+				//CloseHandle(port);
+				//CloseHandle(hEndRead);
 				cout << "Time is " << (duration_cast<seconds>(steady_clock::now() - start)).count() << " seconds" << endl;
 				return;
 			}
@@ -117,7 +118,7 @@ void readFromFileUsingWinAPI(wstring str) {
 			}
 		}
 
-		bResult = GetOverlappedResult(port, &ovr, &R, TRUE);
+		bResult = GetOverlappedResult(port.get(), &ovr, &R, TRUE);
 
 		if (!bResult)
 		{
@@ -125,25 +126,18 @@ void readFromFileUsingWinAPI(wstring str) {
 			{
 			case ERROR_HANDLE_EOF:
 				cout << "End of file" << endl;
-				CloseHandle(port);
-				CloseHandle(hEndRead);
+				//CloseHandle(port.get());
+				//CloseHandle(hEndRead);
 				cout << "Time is " << (duration_cast<seconds>(steady_clock::now() - start)).count() << " seconds" << endl;
 				return;
 			}
 		}
-		/*else {
-			cout << "End of file" << endl;
-			CloseHandle(port);
-			CloseHandle(hEndRead);
-			cout << "Time is " << (duration_cast<seconds>(steady_clock::now() - start)).count() << "seconds" << endl;
-			return;
-		}*/
 
 		//WaitForSingleObject(hEndRead, INFINITE);
-		// печатаем число
+
 		cout << this_thread::get_id() << endl;
 		cout << Line << " " << endl;
-		// увеличивает смещение в файле
+
 		ovr.Offset += sizeof(Line);
 
 	}
@@ -165,7 +159,10 @@ void readFromFileUsingWinAPI(wstring str) {
 
 void readFromFileUsingSTD(const char str[]) {
 
-	unique_ptr<FILE, int(*)(FILE*)> file(fopen(str, "rt"), fclose);
+	using UniqueFile = unique_ptr<remove_pointer<FILE>::type, integral_constant<decltype(&fclose), &fclose>>;
+
+	UniqueFile file(fopen(str, "rt"));
+	//unique_ptr<FILE, int(*)(FILE*)> file(fopen(str, "rt"), fclose);
 
 	if (file.get() == NULL)
 	{
@@ -173,14 +170,14 @@ void readFromFileUsingSTD(const char str[]) {
 		exit(1);
 	}
 
-	// определяем размер файла
+
 	fseek(file.get(), 0, SEEK_END);
 	long lSize = ftell(file.get());
 	rewind(file.get());
 
-	//unique_ptr<char , void*> buffer((char*)malloc(sizeof(char) * lSize), free);
-	unique_ptr<char> buffer((char*)calloc(sizeof(char), lSize));
-	//char * buffer = (char*)calloc(sizeof(char), lSize); 
+	using UniqueBuffer = unique_ptr<remove_pointer<char>::type, integral_constant<decltype(&free), &free>>;
+
+	UniqueBuffer buffer((char*)calloc(sizeof(char), lSize));
 
 	if (buffer.get() == NULL)
 	{
@@ -200,8 +197,9 @@ void readFromFileUsingSTD(const char str[]) {
 
 	cout << buffer.get();
 
-	//fclose(ptrFile);
-	free(buffer.get());
+	//file.get_deleter();
+	//fclose(file.get());
+	//free(buffer.get());
 }
 
 int main(int argc, char *argv[])
@@ -210,15 +208,12 @@ int main(int argc, char *argv[])
 
 	setlocale(LC_ALL, "ru");
 
-
-
-
-	/*auto oldin = GetConsoleCP();
+#ifdef locale
+	auto oldin = GetConsoleCP();
 	auto oldout = GetConsoleOutputCP();
 	SetConsoleCP(1251);
-	SetConsoleOutputCP(1251);*/
-	//SetConsoleCP(oldin);
-	//SetConsoleOutputCP(oldout);
+	SetConsoleOutputCP(1251);
+#endif
 
 	try
 	{
@@ -227,8 +222,12 @@ int main(int argc, char *argv[])
 		string str1 = toml::find<toml::string>(data, "pathToFile", 0);
 		string str2 = toml::find<toml::string>(data, "pathToFile", 1);
 		//cout << "The path 1 is " << path["pathToFile"][0] << " and the path 2 is " << path["pathToFile"][1] << endl;
+
 		//thread t(readFromFileUsingSTD, to_wstring(path["pathToFile"][0].as_string()));
+
+		//readFromFileUsingWinAPI(to_wstring(str1));
 		readFromFileUsingSTD(str2.c_str());
+
 		//t.join();
 	}
 	catch (const exception& ex)
@@ -236,6 +235,10 @@ int main(int argc, char *argv[])
 		cout << ex.what();
 	}
 
+#ifdef locale
+	SetConsoleCP(oldin);
+	SetConsoleOutputCP(oldout);
+#endif
 
 	//#################################################################################################################### 2
 
